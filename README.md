@@ -50,6 +50,7 @@ sudo apt-get install cron
 | MONGODB_DOCKER_NAME   | String | false    | Choosing custom MongoDB docker container name              |
 | WORDPRESS_DOCKER_NAME | String | false    | Choosing custom WordPress docker container name            |
 | MYSQL_DOCKER_NAME     | String | false    | Choosing custom MySQL docker container name                |
+| SECOND_CONTAINER      | String | false    | Second docker container                                    |
 | PROJECT_NAME          | String | false    | Choosing project name for final backup file                |
 
 Note 📒: The mongo values are required when the mongo container exists

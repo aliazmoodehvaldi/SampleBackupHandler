@@ -24,6 +24,10 @@ if [ -n "$MONGODB_DOCKER_NAME" ]; then
         echo "Stopping MongoDB container..."
         sudo docker stop $mongodb_name
 
+        if [[ -n "$SECOND_CONTAINER" ]]; then
+          sudo docker stop $SECOND_CONTAINER
+        fi
+
         # Tar backup
         echo "Creating WordPress + DB backup..."
         if [ -f "$base_path/exclude.txt" ]; then
@@ -34,6 +38,10 @@ if [ -n "$MONGODB_DOCKER_NAME" ]; then
 
         echo "Starting MongoDB container..."
         sudo docker start $mongodb_name
+
+        if [[ -n "$SECOND_CONTAINER" ]]; then
+          sudo docker start $SECOND_CONTAINER
+        fi
     else
         echo "${yellow}Warning: MongoDB container '$mongodb_name' not found"
     fi
@@ -49,6 +57,10 @@ if [ -n "$MYSQL_DOCKER_NAME" ] && [ -n "$WORDPRESS_DOCKER_NAME" ]; then
     sudo docker exec $mysql_name mysqldump \
         -u $MYSQL_USER -p$MYSQL_PASSWORD \
         --databases $MYSQL_DATABASE > "$ARCHIVE_MYSQL_PATH"
+
+    if [[ -n "$SECOND_CONTAINER" ]]; then
+      sudo docker stop $SECOND_CONTAINER
+    fi
 
     # Stop containers
     echo "Stopping WordPress and MySQL containers..."
@@ -67,6 +79,10 @@ if [ -n "$MYSQL_DOCKER_NAME" ] && [ -n "$WORDPRESS_DOCKER_NAME" ]; then
     echo "Starting WordPress and MySQL containers..."
     sudo docker start $mysql_name
     sudo docker start $wordpress_name
+
+    if [[ -n "$SECOND_CONTAINER" ]]; then
+      sudo docker start $SECOND_CONTAINER
+    fi
 else
     echo "${yellow}Warning: MySQL or WordPress container names not set in env"
 fi
