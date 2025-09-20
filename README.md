@@ -32,19 +32,25 @@ sudo apt-get install cron
 3. Create a .env file in `/home/backup` and set the following environment variables:
 4. Grant execute access to scripts: `sudo chmod +x /home/backup/*.sh`
 
-| KEY                  | Type   | Required | Description                                                |
-|----------------------|--------|----------|------------------------------------------------------------|
-| S3_BUCKET            | String | true     | S3 bucket name                                             |
-| ENDPOINT_URL         | String | true     | S3 endpoint url                                            |
-| STORAGE_PERIOD       | Number | true     | Duration of file retention                                 |
-| SCRIPT_PATH          | String | true     | Address of root scripts of the project                     |
-| TARGET_PATH          | String | true     | The address of the backup path                             |
-| ARCHIVE_MONGODB_PATH | String | false    | The address of the backup path inside the docker container |
-| MONGODB_USERNAME     | String | false    | MongoDB username                                           |
-| MONGODB_PASSWORD     | String | false    | MongoDB password                                           |
-| MONGODB_PORT         | Number | false    | MongoDB port                                               |
-| MONGODB_DOCKER_NAME  | String | false    | Choosing custom MongoDB docker container name              |
-| PROJECT_NAME         | String | false    | Choosing project name for final backup file                |
+| KEY                   | Type   | Required | Description                                                |
+|-----------------------|--------|----------|------------------------------------------------------------|
+| S3_BUCKET             | String | true     | S3 bucket name                                             |
+| ENDPOINT_URL          | String | true     | S3 endpoint url                                            |
+| STORAGE_PERIOD        | Number | true     | Duration of file retention                                 |
+| SCRIPT_PATH           | String | true     | Address of root scripts of the project                     |
+| TARGET_PATH           | String | true     | The address of the backup path                             |
+| ARCHIVE_MONGODB_PATH  | String | false    | The address of the backup path inside the docker container |
+| ARCHIVE_MYSQL_PATH    | String | false    | The address of the backup path inside the docker container |
+| MONGODB_USERNAME      | String | false    | MongoDB username                                           |
+| MYSQL_USER            | String | false    | MySQL username                                             |
+| MONGODB_PASSWORD      | String | false    | MongoDB password                                           |
+| MYSQL_PASSWORD        | String | false    | MySQL password                                             |
+| MYSQL_DATABASE        | String | false    | MySQL database name                                        |
+| MONGODB_PORT          | Number | false    | MongoDB port                                               |
+| MONGODB_DOCKER_NAME   | String | false    | Choosing custom MongoDB docker container name              |
+| WORDPRESS_DOCKER_NAME | String | false    | Choosing custom WordPress docker container name            |
+| MYSQL_DOCKER_NAME     | String | false    | Choosing custom MySQL docker container name                |
+| PROJECT_NAME          | String | false    | Choosing project name for final backup file                |
 
 Note 📒: The mongo values are required when the mongo container exists
 

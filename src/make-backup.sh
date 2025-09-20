@@ -7,37 +7,64 @@ base_path=$(echo $1 | sed 's/.*=//')
 filename=$(date +'%Y-%m-%d-%T-%N')
 backup_path="$SCRIPT_PATH/${PROJECT_NAME:-Backup}-$filename.tar.gz"
 
-mongodb_name="${MONGODB_DOCKER_NAME:-mongo}"
+# --- MongoDB Backup ---
+if [ -n "$MONGODB_DOCKER_NAME" ]; then
+    mongodb_name="$MONGODB_DOCKER_NAME"
 
-# Check if the mongo container exists
-if sudo docker ps -a --format '{{.Names}}' | grep -q "^$mongodb_name$"; then
-    echo "Stopping MongoDB container..."
-    sudo docker stop $mongodb_name
+    if sudo docker ps -a --format '{{.Names}}' | grep -q "^$mongodb_name$"; then
+        echo "Stopping MongoDB container..."
+        sudo docker stop $mongodb_name
 
-    echo "Taking MongoDB backup..."
-    sudo docker exec $mongodb_name mongodump \
-        --verbose \
-        --archive=$ARCHIVE_MONGODB_PATH \
-        --authenticationDatabase admin \
-        --port $MONGODB_PORT \
-        -u $MONGODB_USERNAME \
-        -p $MONGODB_PASSWORD
+        echo "Taking MongoDB backup..."
+        sudo docker exec $mongodb_name mongodump \
+            --verbose \
+            --archive=$ARCHIVE_MONGODB_PATH \
+            --authenticationDatabase admin \
+            --port $MONGODB_PORT \
+            -u $MONGODB_USERNAME \
+            -p $MONGODB_PASSWORD
 
-    echo "Starting MongoDB container..."
-    sudo docker start $mongodb_name
-else
-    echo "${yellow}Warning: 'mongo' docker container does not exist Or mongodb container have different name, Set MONGODB_DOCKER_NAME env on exclude.txt file"
+        echo "Starting MongoDB container..."
+        sudo docker start $mongodb_name
+    else
+        echo "${yellow}Warning: MongoDB container '$mongodb_name' not found"
+    fi
 fi
 
-# Create tar backup
-if [ -f "$base_path/exclude.txt" ]; then
-  tar -czvf $backup_path --exclude-from="$base_path/exclude.txt" $TARGET_PATH
+# --- MySQL + WordPress Backup ---
+if [ -n "$MYSQL_DOCKER_NAME" ] && [ -n "$WORDPRESS_DOCKER_NAME" ]; then
+    mysql_name="$MYSQL_DOCKER_NAME"
+    wordpress_name="$WORDPRESS_DOCKER_NAME"
+
+    # Stop containers
+    echo "Stopping WordPress and MySQL containers..."
+    sudo docker stop $wordpress_name
+    sudo docker stop $mysql_name
+
+    # MySQL Dump
+    echo "Taking MySQL backup..."
+    sudo docker exec $mysql_name mysqldump \
+        -u $MYSQL_USER -p$MYSQL_PASSWORD \
+        --databases $MYSQL_DATABASE > "$ARCHIVE_MYSQL_PATH"
+
+    # Tar backup
+    echo "Creating WordPress + DB backup..."
+    if [ -f "$base_path/exclude.txt" ]; then
+        tar -czvf $backup_path --exclude-from="$base_path/exclude.txt" $TARGET_PATH
+    else
+        tar -czvf $backup_path $TARGET_PATH
+    fi
+
+    # Start containers
+    echo "Starting WordPress and MySQL containers..."
+    sudo docker start $mysql_name
+    sudo docker start $wordpress_name
 else
-    tar -czvf $backup_path $TARGET_PATH
+    echo "${yellow}Warning: MySQL or WordPress container names not set in env"
 fi
 
-# Upload backup
+# --- Upload backup ---
 bash "$base_path/upload-file.sh" $1 $backup_path
 
-# Remove local backup
+# --- Remove local backup ---
 rm $backup_path
