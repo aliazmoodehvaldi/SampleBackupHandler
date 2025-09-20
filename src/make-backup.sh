@@ -12,9 +12,6 @@ if [ -n "$MONGODB_DOCKER_NAME" ]; then
     mongodb_name="$MONGODB_DOCKER_NAME"
 
     if sudo docker ps -a --format '{{.Names}}' | grep -q "^$mongodb_name$"; then
-        echo "Stopping MongoDB container..."
-        sudo docker stop $mongodb_name
-
         echo "Taking MongoDB backup..."
         sudo docker exec $mongodb_name mongodump \
             --verbose \
@@ -23,6 +20,17 @@ if [ -n "$MONGODB_DOCKER_NAME" ]; then
             --port $MONGODB_PORT \
             -u $MONGODB_USERNAME \
             -p $MONGODB_PASSWORD
+
+        echo "Stopping MongoDB container..."
+        sudo docker stop $mongodb_name
+
+        # Tar backup
+        echo "Creating WordPress + DB backup..."
+        if [ -f "$base_path/exclude.txt" ]; then
+            tar -czvf $backup_path --exclude-from="$base_path/exclude.txt" $TARGET_PATH
+        else
+            tar -czvf $backup_path $TARGET_PATH
+        fi
 
         echo "Starting MongoDB container..."
         sudo docker start $mongodb_name
@@ -36,16 +44,16 @@ if [ -n "$MYSQL_DOCKER_NAME" ] && [ -n "$WORDPRESS_DOCKER_NAME" ]; then
     mysql_name="$MYSQL_DOCKER_NAME"
     wordpress_name="$WORDPRESS_DOCKER_NAME"
 
-    # Stop containers
-    echo "Stopping WordPress and MySQL containers..."
-    sudo docker stop $wordpress_name
-    sudo docker stop $mysql_name
-
     # MySQL Dump
     echo "Taking MySQL backup..."
     sudo docker exec $mysql_name mysqldump \
         -u $MYSQL_USER -p$MYSQL_PASSWORD \
         --databases $MYSQL_DATABASE > "$ARCHIVE_MYSQL_PATH"
+
+    # Stop containers
+    echo "Stopping WordPress and MySQL containers..."
+    sudo docker stop $wordpress_name
+    sudo docker stop $mysql_name
 
     # Tar backup
     echo "Creating WordPress + DB backup..."
