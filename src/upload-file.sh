@@ -4,7 +4,6 @@ base_path=$(echo $1 | sed 's/.*=//')
 . "$base_path/utils/init.sh" $base_path
 
 filename=$(basename "$2")
-
 file_dir=$2
 
 upload_with_profile () {
@@ -18,14 +17,14 @@ upload_with_profile () {
         local endpoint_var="ENDPOINT_URL_${upper_profile}"
         endpoint="${!endpoint_var}"
         if [[ -z "$endpoint" ]]; then
-            echo "No endpoint defined for profile: $profile"
+            echo "⚠️ No endpoint defined for profile: $profile"
             return 1
         fi
 
         local bucket_var="S3_BUCKET_${upper_profile}"
         bucket="${!bucket_var}"
         if [[ -z "$bucket" ]]; then
-            echo "No S3 bucket defined for profile: $profile"
+            echo "⚠️ No S3 bucket defined for profile: $profile"
             return 1
         fi
     else
@@ -33,18 +32,26 @@ upload_with_profile () {
         bucket="$S3_BUCKET"
 
         if [[ -z "$endpoint" ]]; then
-            echo "No endpoint defined for single account."
+            echo "⚠️ No endpoint defined for single account."
             return 1
         fi
         if [[ -z "$bucket" ]]; then
-            echo "No S3 bucket defined for single account."
+            echo "⚠️ No S3 bucket defined for single account."
             return 1
         fi
     fi
 
-    aws s3 cp "$file_dir" "s3://$bucket/$filename" \
+    timeout 30 aws s3 cp "$file_dir" "s3://$bucket/$filename" \
         --profile "$profile" \
         --endpoint-url "$endpoint"
+
+    if [[ $? -ne 0 ]]; then
+        echo "⚠️ Upload failed or timed out for profile: $profile"
+        return 1
+    fi
+
+    echo "✅ Upload successful for profile: $profile"
+    return 0
 }
 
 if [[ "$MULTI_ACCOUNT" == "true" ]]; then
