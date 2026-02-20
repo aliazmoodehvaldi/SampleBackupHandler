@@ -52,7 +52,7 @@ sudo apt-get install cron
 | MYSQL_DOCKER_NAME     | String | false    | Choosing custom MySQL docker container name                |
 | SECOND_CONTAINER      | String | false    | Second docker container                                    |
 | PROJECT_NAME          | String | false    | Choosing project name for final backup file                |
-| MULTI_ACCOUNT         | String | false    | Handle upload or delete old backup in multi storages       |
+| MULTI_ACCOUNT         | Boolean| false    | Handle upload or delete old backup in multi storages       |
 
 Note 📒: The mongo values are required when the mongo container exists
 
