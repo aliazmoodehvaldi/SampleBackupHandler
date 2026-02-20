@@ -16,14 +16,14 @@ run_for_profile () {
         local endpoint_var="ENDPOINT_URL_${upper_profile}"
         endpoint="${!endpoint_var}"
         if [[ -z "$endpoint" ]]; then
-            echo "No endpoint defined for profile: $profile"
+            echo "⚠️ No endpoint defined for profile: $profile"
             return 1
         fi
 
         local bucket_var="S3_BUCKET_${upper_profile}"
         bucket="${!bucket_var}"
         if [[ -z "$bucket" ]]; then
-            echo "No S3 bucket defined for profile: $profile"
+            echo "⚠️ No S3 bucket defined for profile: $profile"
             return 1
         fi
     else
@@ -31,17 +31,18 @@ run_for_profile () {
         bucket="$S3_BUCKET"
 
         if [[ -z "$endpoint" ]]; then
-            echo "No endpoint defined for single account."
+            echo "⚠️ No endpoint defined for single account."
             return 1
         fi
 
         if [[ -z "$bucket" ]]; then
-            echo "No S3 bucket defined for single account."
+            echo "⚠️ No S3 bucket defined for single account."
             return 1
         fi
     fi
 
-    aws s3 ls "s3://$bucket" \
+
+    timeout 15 aws s3 ls "s3://$bucket" \
         --profile "$profile" \
         --endpoint-url "$endpoint" | while read -r line; do
 
@@ -50,9 +51,14 @@ run_for_profile () {
         fileDate=$(date -d "$createDate" +%s)
 
         if [[ $fileDate -lt $olderThan && -n "$fileName" ]]; then
-            aws s3 rm "s3://$bucket/$fileName" \
+            timeout 30 aws s3 rm "s3://$bucket/$fileName" \
                 --profile "$profile" \
                 --endpoint-url "$endpoint"
+            if [[ $? -ne 0 ]]; then
+                echo "⚠️ Failed to delete $fileName or timed out for profile: $profile"
+            else
+                echo "✅ Deleted $fileName from profile: $profile"
+            fi
         fi
     done
 }
