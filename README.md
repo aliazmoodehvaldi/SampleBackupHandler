@@ -52,6 +52,7 @@ sudo apt-get install cron
 | MYSQL_DOCKER_NAME     | String | false    | Choosing custom MySQL docker container name                |
 | SECOND_CONTAINER      | String | false    | Second docker container                                    |
 | PROJECT_NAME          | String | false    | Choosing project name for final backup file                |
+| MULTI_ACCOUNT         | String | false    | Handle upload or delete old backup in multi storages       |
 
 Note 📒: The mongo values are required when the mongo container exists
 
@@ -105,3 +106,29 @@ To enable this feature, the all thing that to do is set docker name on env
 ```shell
 MONGODB_DOCKER_NAME=mongodb-1
 ```
+
+# Multi-Account Storage
+
+To enable multi-account support, set the `MULTI_ACCOUNT` flag in your environment variables.
+
+## Example
+
+```shell
+MULTI_ACCOUNT=true
+```
+
+After enabling this setting, you need to register the `S3_BUCKET` and `ENDPOINT_URL` for each profile.
+
+## Example Profiles
+
+```shell
+# Default profile
+S3_BUCKET_DEFAULT=test
+ENDPOINT_URL_DEFAULT=https://s3.com
+
+# Second profile
+S3_BUCKET_SECONDPROFILE=test-2
+ENDPOINT_URL_SECONDPROFILE=https://s3.org
+```
+
+> **Note:** Make sure your profile names exactly match those defined in your environment variables.
