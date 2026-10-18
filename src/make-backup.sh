@@ -73,24 +73,21 @@ fi
 
 # --- MySQL + WordPress Backup ---
 if [ -n "$MYSQL_DOCKER_NAME" ] && [ -n "$WORDPRESS_DOCKER_NAME" ]; then
-    if [ "$simple_backup" = false ]; then
-        # fix #1: MongoDB already took the backup, skip MySQL to avoid overwrite
-        echo "${yellow}Warning: MongoDB backup already taken this run, skipping MySQL${reset}"
-    else
+    if [ "$simple_backup" = true ]; then
         simple_backup=false
-
         echo "Taking MySQL backup..."
-        sudo docker exec "$MYSQL_DOCKER_NAME" mysqldump \
-            -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" \
-            --databases "$MYSQL_DATABASE" > "$ARCHIVE_MYSQL_PATH" || { echo "${red}mysqldump failed${reset}"; exit 1; }
+        sudo docker exec -e MYSQL_PWD="$MYSQL_PASSWORD" "$MYSQL_DOCKER_NAME" \
+            mysqldump --no-tablespaces \
+            -u "$MYSQL_USER" --databases "$MYSQL_DATABASE" \
+            > "$ARCHIVE_MYSQL_PATH" || { echo "${red}mysqldump failed${reset}"; exit 1; }
 
         stopped_containers=("$WORDPRESS_DOCKER_NAME" "$MYSQL_DOCKER_NAME" "$SECOND_CONTAINER")
         stop_containers "${stopped_containers[@]}"
-
         create_tar || { echo "${red}tar failed${reset}"; exit 1; }
-
         start_containers "${stopped_containers[@]}"
         stopped_containers=()
+    else
+        echo "${yellow}Note: skipped MySQL dump (already produced another DB backup)${reset}"
     fi
 fi
 
